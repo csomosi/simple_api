@@ -45,10 +45,10 @@ def create_project():
 
 
 # ez pedig már egy változó beírását is lehetővé teszi az url-be, és annak megfelelő a response:
-@app.route("/project/<string:name>")
-def get_project(name):
+@app.route("/project/<string:proj_id>")
+def get_project(proj_id):
   for project in projects:
-    if project['name'] == name:
+    if project['project_id'] == proj_id:
       return jsonify(project)
   return jsonify({'message': 'project not found'}), 404
 
