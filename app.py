@@ -5,18 +5,10 @@ from flask import Flask, render_template, jsonify, request
 app = Flask(__name__)
 
 projects = []
-# print(type(projects))
 
 with open('./projects.pickle', 'rb') as handle:
   my_data = pickle.load(handle)
-  # when I load this pickle file, it is a dictionary not a list:
-  # print(type(my_data))
-  # print(my_data)
-  # so I neet to put it's content to a list:
-  projects = my_data['projects']
-
-# print(type(projects))
-# print(projects)
+  projects = my_data
 
 
 # ez egy endpoint, ha a böngészőben a főoldalt ("/") jeleníti meg. Ez egy HTTP REQUEST GET METHOD:
