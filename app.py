@@ -1,4 +1,4 @@
-import pickle
+import pickle, uuid
 
 from flask import Flask, render_template, jsonify, request
 
@@ -9,6 +9,11 @@ projects = []
 with open('./projects.pickle', 'rb') as handle:
   my_data = pickle.load(handle)
   projects = my_data
+
+
+def save_data(projects_to_save):
+  with open('./projects.pickle', 'wb') as f:
+    pickle.dump(projects_to_save, f)
 
 
 # ez egy endpoint, ha a böngészőben a főoldalt ("/") jeleníti meg. Ez egy HTTP REQUEST GET METHOD:
@@ -30,10 +35,43 @@ def get_projects():
 # projekt hozzáadása POST methoddal:
 @app.route("/project", methods=['POST'])
 def create_project():
+  new_project_id = uuid.uuid4().hex[:24]
   request_data = request.get_json()
-  new_project = {'name': request_data['name'], 'tasks': request_data['tasks']}
+
+  # generating new tasks (there can be more then one) from request body & random id:
+  new_tasks = []
+  for task in request_data['tasks']:
+    new_task_id = uuid.uuid4().hex[:24]
+    new_checklist = []
+    # generating new chklist items (there can be more then one) from request body & random id:
+    for item in task['checklist']:
+      new_checklist_id = uuid.uuid4().hex[:24]
+      chklist_item = {
+          'name': item['name'],
+          'completed': item['completed'],
+          'checklist_id': new_checklist_id
+      }
+      new_checklist.append(chklist_item)
+
+    new_task = {
+        'name': task['name'],
+        'completed': task['completed'],
+        'checklist': new_checklist,
+        'task_id': new_task_id
+    }
+    new_tasks.append(new_task)
+
+  new_project = {
+      'name': request_data['name'],
+      'tasks': new_tasks,
+      'completed': request_data['completed'],
+      'creation_date': request_data['creation_date'],
+      'project_id': new_project_id
+  }
   projects.append(new_project)
-  return jsonify(new_project), 201
+  save_data(projects)
+  return jsonify({'message':
+                  f'project created with id: {new_project_id}'}), 201
 
 
 # ez pedig már egy változó beírását is lehetővé teszi az url-be, és annak megfelelő a response:
