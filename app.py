@@ -92,20 +92,28 @@ def get_project_tasks(name):
 
 
 # task hozzáadása endpoint (POST METHOD):
-@app.route("/project/<string:name>/task", methods=['POST'])
-def add_task_to_project(name):
+@app.route("/project/<string:proj_id>/task", methods=['POST'])
+def add_task_to_project(proj_id):
   request_data = request.get_json()
   for project in projects:
-    if 'name' in project and project['name'] == name:
+    if 'project_id' in project and project['project_id'] == proj_id:
       if 'completed' not in request_data or type(
           request_data['completed']) is not bool:
         return jsonify({'message': 'completed must be a boolean'}), 400
+      new_task_id = uuid.uuid4().hex[:24]
+      new_checklist_id = uuid.uuid4().hex[:24]
+      new_checklist = request_data['checklist']
+      # I suppose that all requests will have only 1 checklist item as the example, so I can use the first element of the checklist list hardcoded. Otherwise we would need a loop to add all checklist items.
+      new_checklist[0]['checklist_id'] = new_checklist_id
       new_task = {
           'name': request_data['name'],
-          'completed': request_data['completed']
+          'completed': request_data['completed'],
+          'task_id': new_task_id,
+          'checklist': new_checklist
       }
       project['tasks'].append(new_task)
-      return jsonify(new_task), 201
+      save_data(projects)
+      return jsonify({'message': f'task created with id: {new_task_id}'}), 201
   return jsonify({'message': 'project not found'}), 404
 
 
