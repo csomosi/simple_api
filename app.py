@@ -16,16 +16,13 @@ def save_data(projects_to_save):
     pickle.dump(projects_to_save, f)
 
 
-fields = ["name", "completed", "project_id"]
-# fields = ["name"]
-filtered_dicts = []
+# fields = ["name", "completed", "project_id"]
 
 
 def filter_list_of_dicts(list_of_dicts, fields):
+  filtered_dicts = []
   for dict in list_of_dicts:
-
     new_dict = dict.copy()
-
     for key in dict:
       if key not in fields:
         del new_dict[key]
@@ -34,9 +31,8 @@ def filter_list_of_dicts(list_of_dicts, fields):
   return filtered_dicts
 
 
-filter_list_of_dicts(projects, fields)
-
-print(f'filtered list is: {filtered_dicts}')
+# filter_list_of_dicts(projects, fields)
+# print(f'filtered list is: {filtered_dicts}')
 
 
 # ez egy endpoint, ha a böngészőben a főoldalt ("/") jeleníti meg. Ez egy HTTP REQUEST GET METHOD:
@@ -48,11 +44,18 @@ def home():
 # ez az endpoint már nem a főoldalt, hanem ha az urlbe azt írom, hogy "/projects" akkor az alábbi return-t jeleníti meg:
 @app.route("/projects")
 def get_projects():
-  # return jsonify({'projects': projects})
-  # ha azt akarom, hogy ezt elérje másik domain-ről egy web alkalmazás, akkor így kell megírni (konkrét elérési út helyett a * bárkit enged hozzáférni):
-  return jsonify({'projects': projects}), 200, {
-      'Access-Control-Allow-Origin': 'http://127.0.0.1:5500'
-  }
+  try:
+    request_data = request.get_json()
+    print(f'request_data is {type(request_data)} : {request_data}')
+    fields = request_data['fields']
+    return jsonify(filter_list_of_dicts(projects, fields))
+  except:
+
+    # return jsonify({'projects': projects})
+    # ha azt akarom, hogy ezt elérje másik domain-ről egy web alkalmazás, akkor így kell megírni (konkrét elérési út helyett a * bárkit enged hozzáférni):
+    return jsonify({'projects': projects}), 200, {
+        'Access-Control-Allow-Origin': 'http://127.0.0.1:5500'
+    }
 
 
 # projekt hozzáadása POST methoddal:
@@ -106,11 +109,18 @@ def get_project(proj_id):
   return jsonify({'message': 'project not found'}), 404
 
 
-@app.route("/project/<string:name>/tasks")
-def get_project_tasks(name):
+# original end point was searching by name, so first I need to modify to searc by id.
+@app.route("/project/<string:proj_id>/tasks")
+def get_project_tasks(proj_id):
   for project in projects:
-    if project['name'] == name:
-      return jsonify({'tasks': project['tasks']})
+    if project['project_id'] == proj_id:
+      try:
+        request_data = request.get_json()
+        fields = request_data['fields']
+        found_project = project['tasks']
+        return jsonify(filter_list_of_dicts(found_project, fields))
+      except:
+        return jsonify({'tasks': project['tasks']})
   return jsonify({'message': 'project not found'}), 404
 
 
