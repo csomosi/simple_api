@@ -16,6 +16,29 @@ def save_data(projects_to_save):
     pickle.dump(projects_to_save, f)
 
 
+fields = ["name", "completed", "project_id"]
+# fields = ["name"]
+filtered_dicts = []
+
+
+def filter_list_of_dicts(list_of_dicts, fields):
+  for dict in list_of_dicts:
+
+    new_dict = dict.copy()
+
+    for key in dict:
+      if key not in fields:
+        del new_dict[key]
+      pass
+    filtered_dicts.append(new_dict)
+  return filtered_dicts
+
+
+filter_list_of_dicts(projects, fields)
+
+print(f'filtered list is: {filtered_dicts}')
+
+
 # ez egy endpoint, ha a böngészőben a főoldalt ("/") jeleníti meg. Ez egy HTTP REQUEST GET METHOD:
 @app.route("/")
 def home():
